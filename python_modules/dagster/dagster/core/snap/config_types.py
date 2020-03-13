@@ -17,8 +17,13 @@ def build_config_schema_snapshot(pipeline_def):
             all_config_snaps_by_key,
             {ct.key: snap_from_config_type(ct) for ct in environment_schema.all_config_types()},
         )
+<<<<<<< HEAD:python_modules/dagster/dagster/core/snap/config_types.py
 
     return ConfigSchemaSnapshot(all_config_snaps_by_key)
+=======
+    print(all_config_metas_by_key)
+    return ConfigSchemaSnapshot(all_config_metas_by_key)
+>>>>>>> wip:python_modules/dagster/dagster/core/meta/config_types.py
 
 
 @whitelist_for_serdes

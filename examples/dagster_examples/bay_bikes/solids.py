@@ -1,10 +1,11 @@
+import json
 import os
 import pickle
 import tempfile
 import uuid
 from datetime import timedelta
 from time import gmtime, strftime
-from typing import Tuple
+from typing import Tuple, List
 from zipfile import ZipFile
 
 import requests
@@ -38,7 +39,7 @@ from dagster import (
     check,
     composite_solid,
     solid,
-)
+    Dict)
 from dagster.utils import PICKLE_PROTOCOL
 
 # Added this to silence tensorflow logs. They are insanely verbose.
@@ -101,7 +102,6 @@ def load_compressed_csv_file(
         header=0,
         compression=context.solid_config['compression'],
     )
-    dataset['uuid'] = [uuid.uuid4() for _ in range(len(dataset))]
     return dataset
 
 
@@ -128,20 +128,48 @@ def upload_pickled_object_to_gcs_bucket(context, value: Any, bucket_name: str, f
     yield Output(value)
 
 
+def _insert_into_table(context, table_name, records, engine):
+
+
+    context.log.info("executing the following insert query: {}".format(sql))
+    
+    yield Materialization(label='{table_name} staging table updated')
+
+
+
+
 @solid(
     input_defs=[InputDefinition('row', DagsterPandasDataFrame), InputDefinition('table_name', str)],
-    config={'index_label': Field(str)},
+    output_defs=[OutputDefinition(str, name='staging_table')]
     required_resource_keys={'postgres_db'},
 )
-def insert_into_table(context, row: DataFrame, table_name: str) -> str:
-    row.to_sql(
-        table_name,
-        context.resources.postgres_db.engine,
-        if_exists='append',
-        index=False,
-        index_label=context.solid_config['index_label'],
+def insert_into_staging_table(context, records: DataFrame, table_name: str) -> str:
+    # create table
+    create_table_sql = "create table if not exists {table_name} (id serial not null primary key, staging_data json not null, );".format(
+        table_name=table_name)
+    context.log.info("Executing query: {}".format(create_table_sql))
+    context.resources.postgres_db.engine.execute(create_table_sql)
+
+    # insert into table
+    data = ",".join([
+        '({record})'.format(record=json.dumps(record))
+        for record in records.to_dict('records')
+    ])
+    insert_sql = "insert into {table_name} values {data};".format(table_name=table_name, data=data)
+    context.log.info("Executing query: {}".format(insert_sql))
+    context.resources.postgres_db.engine.execute(insert_sql)
+    yield Materialization(
+        label=table_name,
+        description='staging table',
+        metadata_entries=[
+            EventMetadataEntry.text(str(len(records)), "num rows inserted"),
+        ]
     )
-    return table_name
+    yield Output(output_name='staging_table', value=table_name)
+
+
+@solid
+def load_from_staging_table
 
 
 @solid(
@@ -203,7 +231,6 @@ def download_weather_report_from_weather_api(context, epoch_date: int) -> DataFr
     response = requests.get(url)
     response.raise_for_status()
     raw_weather_data = response.json()['daily']['data'][0]
-    raw_weather_data['uuid'] = uuid.uuid4()
     return DataFrame([raw_weather_data])
 
 
