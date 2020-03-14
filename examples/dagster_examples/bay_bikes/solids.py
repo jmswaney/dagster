@@ -128,16 +128,6 @@ def upload_pickled_object_to_gcs_bucket(context, value: Any, bucket_name: str, f
     yield Output(value)
 
 
-def _insert_into_table(context, table_name, records, engine):
-
-
-    context.log.info("executing the following insert query: {}".format(sql))
-    
-    yield Materialization(label='{table_name} staging table updated')
-
-
-
-
 @solid(
     input_defs=[InputDefinition('row', DagsterPandasDataFrame), InputDefinition('table_name', str)],
     output_defs=[OutputDefinition(str, name='staging_table')]
@@ -169,7 +159,8 @@ def insert_into_staging_table(context, records: DataFrame, table_name: str) -> s
 
 
 @solid
-def load_from_staging_table
+def load_from_staging_table(context):
+    pass
 
 
 @solid(
