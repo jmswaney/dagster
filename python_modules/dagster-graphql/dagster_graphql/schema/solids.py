@@ -445,6 +445,7 @@ def build_dauphin_solid(pipeline_snapshot, solid, deps):
     )
 
 
+# TODO add the dependency structure
 def build_dauphin_solids(pipeline_snapshot, container):
     check.inst_param(container, 'container', IContainSolids)
     check.inst_param(pipeline_snapshot, 'pipeline_snapshot', PipelineSnapshot)

@@ -378,6 +378,7 @@ class CompositeSolidDefinition(ISolidDefinition, IContainSolids):
 
         # eager computation to detect cycles
         self.solids_in_topological_order = self._solids_in_topological_order()
+        self._cached_dep_structure_snapshot_index = None
 
         output_defs = [output_mapping.definition for output_mapping in self._output_mappings]
 
@@ -512,6 +513,19 @@ class CompositeSolidDefinition(ISolidDefinition, IContainSolids):
         for solid_def in self._solid_defs:
             for ttype in solid_def.all_dagster_types():
                 yield ttype
+
+    def get_dep_structure_snapshot_index(self):
+        if self._cached_dep_structure_snapshot_index is None:
+            from dagster.core.snap.dep_snapshot import (
+                DependencyStructureSnapshotIndex,
+                build_dep_structure_snapshot_from_icontains_solids,
+            )
+
+            self._cached_dep_structure_snapshot_index = DependencyStructureSnapshotIndex(
+                build_dep_structure_snapshot_from_icontains_solids(self)
+            )
+
+        return self._cached_dep_structure_snapshot_index
 
 
 def _validate_in_mappings(input_mappings, solid_dict, name):

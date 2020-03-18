@@ -211,6 +211,7 @@ class PipelineDefinition(IContainSolids, object):
         )
         self._cached_enviroment_schemas = {}
         self._cached_pipeline_snapshot = None
+        self._cached_dep_structure_snapshot_index = None
 
     def get_environment_schema(self, mode=None):
         check.str_param(mode, 'mode')
@@ -467,6 +468,19 @@ class PipelineDefinition(IContainSolids, object):
 
     def get_config_schema_snapshot(self):
         return self.get_pipeline_snapshot().config_schema_snapshot
+
+    def get_dep_structure_snapshot_index(self):
+        if self._cached_dep_structure_snapshot_index is None:
+            from dagster.core.snap.dep_snapshot import (
+                DependencyStructureSnapshotIndex,
+                build_dep_structure_snapshot_from_icontains_solids,
+            )
+
+            self._cached_dep_structure_snapshot_index = DependencyStructureSnapshotIndex(
+                build_dep_structure_snapshot_from_icontains_solids(self)
+            )
+
+        return self._cached_dep_structure_snapshot_index
 
 
 def _dep_key_of(solid):

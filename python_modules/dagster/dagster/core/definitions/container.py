@@ -25,6 +25,10 @@ class IContainSolids(six.with_metaclass(ABCMeta)):  # pylint: disable=no-init
     def solid_named(self, name):
         pass
 
+    @abstractmethod
+    def get_dep_structure_snapshot_index(self):
+        pass
+
     def _solids_in_topological_order(self):
         _forward_edges, backward_edges = _create_adjacency_lists(
             self.solids, self.dependency_structure
