@@ -28,7 +28,6 @@ from keras.models import Sequential
 from numpy import array, ndarray, transpose
 from pandas import (
     DataFrame,
-    Series,
     date_range,
     get_dummies,
     json_normalize,
@@ -47,7 +46,6 @@ from dagster import (
     Materialization,
     Output,
     OutputDefinition,
-    SolidDefinition,
     check,
     composite_solid,
     solid,
