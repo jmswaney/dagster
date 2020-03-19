@@ -12,8 +12,6 @@ solids:
           target_csv_file_in_archive:
             value: 201801-fordgobike-tripdata.csv
       insert_trip_data_into_table:
-        config:
-          index_label: uuid
         inputs:
           table_name:
-            value: trips
+            value: trips_staging

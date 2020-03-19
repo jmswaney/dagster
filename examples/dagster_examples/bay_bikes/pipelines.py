@@ -6,7 +6,7 @@ from .solids import (
     produce_training_set,
     produce_trip_dataset,
     produce_weather_dataset,
-    train_lstm_model,
+    train_lstm_model_and_upload_to_gcs,
     transform_into_traffic_dataset,
     trip_etl,
     upload_pickled_object_to_gcs_bucket,
@@ -74,7 +74,7 @@ def generate_training_set_and_train_model():
     upload_training_set_to_gcs = upload_pickled_object_to_gcs_bucket.alias(
         'upload_training_set_to_gcs'
     )
-    return train_lstm_model(
+    return train_lstm_model_and_upload_to_gcs(
         upload_training_set_to_gcs(
             produce_training_set(
                 transform_into_traffic_dataset(produce_trip_dataset(trip_etl())),
@@ -82,3 +82,33 @@ def generate_training_set_and_train_model():
             )
         )
     )
+
+
+@pipeline(
+    mode_defs=[
+        ModeDefinition(
+            name='development',
+            resource_defs={
+                'postgres_db': postgres_db_info_resource,
+                'gcs_client': local_client,
+                'credentials_vault': credentials_vault,
+                'volume': mount,
+            },
+            description='Mode to be used during local demo.',
+        )
+    ],
+    preset_defs=[
+        PresetDefinition.from_files(
+            'weather_etl',
+            mode='development',
+            environment_files=[
+                file_relative_path(__file__, 'environments/dev_database_resources.yaml'),
+                file_relative_path(__file__, 'environments/credentials_vault.yaml'),
+                file_relative_path(__file__, 'environments/dev_file_system_resources.yaml'),
+                file_relative_path(__file__, 'environments/weather.yaml'),
+            ],
+        )
+    ],
+)
+def daily_weather_pipeline():
+    return weather_etl()

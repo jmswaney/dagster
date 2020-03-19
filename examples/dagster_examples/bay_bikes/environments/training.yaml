@@ -7,25 +7,22 @@ solids:
     config:
       memory_length: 1
   produce_trip_dataset:
-    solids:
-      load_entire_trip_table:
-        config:
-          index_label: uuid
     inputs:
       table_name:
-        value: trips
+        value: trips_staging
   produce_weather_dataset:
     solids:
       load_entire_weather_table:
         config:
-          index_label: uuid
           subsets:
             - time
     inputs:
       table_name:
-        value: weather
-  train_lstm_model:
+        value: weather_staging
+  train_lstm_model_and_upload_to_gcs:
     config:
       timeseries_train_test_breakpoint: 50
       model_trainig_config:
         num_epochs: 200
+    inputs:
+      bucket_name: dagster-scratch-ccdfe1e
