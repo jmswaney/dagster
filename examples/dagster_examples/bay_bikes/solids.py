@@ -75,7 +75,7 @@ def _download_zipfile_from_url(url: str, target: str, chunk_size=8192) -> str:
     config={'chunk_size': Field(int, is_required=False, default_value=8192)},
     required_resource_keys={'volume'},
 )
-def download_zipfile_from_url(context, file_name: str, base_url: str) -> str:
+def download_zipfile_from_url(context, file_name: str, base_url: str):
     url = "/".join([base_url, file_name])
     # mount dirs onto volume
     target = os.path.join(context.resources.volume, file_name)
@@ -174,7 +174,7 @@ def _create_and_load_staging_table(engine, table_name, records):
     output_defs=[OutputDefinition(str, name='staging_table')],
     required_resource_keys={'postgres_db'},
 )
-def insert_into_staging_table(context, records: DataFrame, table_name: str) -> str:
+def insert_into_staging_table(context, records: DataFrame, table_name: str):
     _create_and_load_staging_table(context.resources.postgres_db.engine, table_name, records)
     yield Materialization(
         label=table_name,
