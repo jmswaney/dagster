@@ -53,9 +53,9 @@ from dagster import (
 from dagster.utils import PICKLE_PROTOCOL
 
 if sys.version_info > (3, 5):
-    from pandas import json_normalize  # pylint:disable=import-error
+    from pandas import json_normalize  # pylint:disable=import-error,no-name-in-module
 else:
-    from pandas.io.json import json_normalize  # pylint:disable=import-error
+    from pandas.io.json import json_normalize  # pylint:disable=import-error,no-name-in-module
 
 
 # Added this to silence tensorflow logs. They are insanely verbose.

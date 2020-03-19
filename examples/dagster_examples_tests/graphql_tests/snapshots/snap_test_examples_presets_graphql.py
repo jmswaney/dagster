@@ -379,26 +379,23 @@ solids:
   produce_trip_dataset:
     inputs:
       table_name:
-        value: trips
-    solids:
-      load_entire_trip_table:
-        config:
-          index_label: uuid
+        value: trips_staging
   produce_weather_dataset:
     inputs:
       table_name:
-        value: weather
+        value: weather_staging
     solids:
       load_entire_weather_table:
         config:
-          index_label: uuid
           subsets:
           - time
-  train_lstm_model:
+  train_lstm_model_and_upload_to_gcs:
     config:
       model_trainig_config:
         num_epochs: 200
       timeseries_train_test_breakpoint: 50
+    inputs:
+      bucket_name: dagster-scratch-ccdfe1e
   upload_training_set_to_gcs:
     inputs:
       bucket_name: dagster-scratch-ccdfe1e
@@ -434,11 +431,9 @@ solids:
           file_name:
             value: 201801-fordgobike-tripdata.csv.zip
       insert_trip_data_into_table:
-        config:
-          index_label: uuid
         inputs:
           table_name:
-            value: trips
+            value: trips_staging
       load_baybike_data_into_dataframe:
         inputs:
           target_csv_file_in_archive:
@@ -467,16 +462,10 @@ solids:
 solids:
   weather_etl:
     solids:
-      download_weather_report_from_weather_api:
-        inputs:
-          epoch_date:
-            value: 1514851200
       insert_weather_report_into_table:
-        config:
-          index_label: uuid
         inputs:
           table_name:
-            value: weather
+            value: weather_staging
 ''',
                 'mode': 'development',
                 'name': 'weather_etl',
