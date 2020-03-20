@@ -1,7 +1,6 @@
 import json
 import os
 import pickle
-import sys
 import tempfile
 import uuid
 from datetime import timedelta
@@ -182,23 +181,23 @@ def insert_into_staging_table(context, records: DataFrame, table_name: str):
         description='Table {} created in database {}'.format(
             table_name, context.resources.postgres_db.db_name
         ),
-        metadata_entries=[EventMetadataEntry.text(str(len(records)), "num rows inserted"),],
+        metadata_entries=[EventMetadataEntry.text(str(len(records)), "num rows inserted")],
     )
     yield Output(output_name='staging_table', value=table_name)
 
 
-def download_table_as_typed_dataframe(name, expected_dagster_pandas_dataframe_schema):
+def create_download_table_as_dataframe_solid(name, expected_dagster_pandas_dataframe_type):
     check.str_param(name, 'name')
     check.inst_param(
-        expected_dagster_pandas_dataframe_schema,
+        expected_dagster_pandas_dataframe_type,
         'expected_dagster_pandas_dataframe_schema',
         DagsterType,
     )
 
     @solid(
         input_defs=[InputDefinition('table_name', str)],
-        output_defs=[OutputDefinition(expected_dagster_pandas_dataframe_schema)],
-        config={'subsets': Field([str], is_required=False, default_value=[]),},
+        output_defs=[OutputDefinition(expected_dagster_pandas_dataframe_type)],
+        config={'subsets': Field([str], is_required=False)},
         required_resource_keys={'postgres_db'},
         name=name,
     )
@@ -549,7 +548,7 @@ def trip_etl():
     output_defs=[OutputDefinition(name='trip_dataframe', dagster_type=TripDataFrame)],
 )
 def produce_trip_dataset(table_name: str) -> DataFrame:
-    load_entire_trip_table = download_table_as_typed_dataframe(
+    load_entire_trip_table = create_download_table_as_dataframe_solid(
         'load_entire_trip_table', RawTripDataFrame
     )
     return preprocess_trip_dataset(load_entire_trip_table(table_name))
@@ -568,7 +567,7 @@ def weather_etl():
     output_defs=[OutputDefinition(name='weather_dataframe', dagster_type=WeatherDataFrame)],
 )
 def produce_weather_dataset(table_name: str) -> DataFrame:
-    load_entire_weather_table = download_table_as_typed_dataframe(
+    load_entire_weather_table = create_download_table_as_dataframe_solid(
         'load_entire_weather_table', DagsterPandasDataFrame
     )
     return preprocess_weather_dataset(load_entire_weather_table(table_name))

@@ -53,23 +53,21 @@ def daily_weather_ingest_schedule(date):
 )
 def daily_weather_schedule(date):
     unix_seconds_since_epoch = int((date - datetime(year=1970, month=1, day=1)).total_seconds())
-    return dict_merge(
-        {
-            'resources': weather_etl_environment['resources'],
-            'solids': {'weather_etl': weather_etl_environment['solids']['weather_etl']},
-        },
-        {
-            'solids': {
-                'weather_etl': {
-                    'solids': {
-                        'download_weather_report_from_weather_api': {
-                            'inputs': {'epoch_date': {'value': unix_seconds_since_epoch}}
-                        },
+    return {
+        'resources': weather_etl_environment['resources'],
+        'solids': {
+            'weather_etl': {
+                'solids': {
+                    'download_weather_report_from_weather_api': {
+                        'inputs': {'epoch_date': {'value': unix_seconds_since_epoch}}
                     },
-                }
+                    'insert_weather_report_into_table': {
+                        'inputs': {'table_name': {'value': 'weather_staging'}}
+                    },
+                },
             }
         },
-    )
+    }
 
 
 @monthly_schedule(
