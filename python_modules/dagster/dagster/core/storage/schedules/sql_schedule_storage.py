@@ -1,5 +1,7 @@
+import datetime
 from abc import abstractmethod
 
+import pytz
 import six
 import sqlalchemy as db
 
@@ -84,6 +86,9 @@ class SqlScheduleStorage(ScheduleStorage):
                     repository_name=repository.name,
                     schedule_name=schedule_tick_data.schedule_name,
                     status=schedule_tick_data.status.value,
+                    timestamp=datetime.datetime.fromtimestamp(
+                        schedule_tick_data.timestamp, tz=pytz.utc
+                    ),
                     tick_body=serialize_dagster_namedtuple(schedule_tick_data),
                 )
                 result = conn.execute(tick_insert)
