@@ -292,7 +292,6 @@ def test_generate_training_set(mocker):
     # Ensure we are generating the expected training set
     training_set, labels = test_pipeline_result.output_for_solid('produce_training_set')
     assert len(labels) == 1 and labels[0] == 1
-    print(training_set.tolist())
     assert array_equal(
         training_set,
         [
